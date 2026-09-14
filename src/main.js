@@ -12,8 +12,8 @@ let grassInstances = [];
 let waterPlane = null;
 let waterOverlay = null;
 let snowGround = null;
-const timer = new THREE.Timer();
-timer.connect(document);
+// 替换废弃 THREE.Timer，使用官方Clock
+const clock = new THREE.Clock();
 // 基础容器
 const app = document.getElementById('app')
 const width = window.innerWidth
@@ -24,7 +24,7 @@ const scene = new THREE.Scene()
 scene.fog = new THREE.FogExp2(0xffbc89, 0.0028)
 const camera = new THREE.PerspectiveCamera(58, width / height, 0.1, 2000)
 camera.position.set(18, 10, 28)
-camera.lookAt(0, 35, 0)
+camera.lookAt(0, 0, 0) // 修复：看向场景中心，不再看高空
 const renderer = new THREE.WebGLRenderer({
   antialias: true,
   powerPreference: 'high-performance'
@@ -403,7 +403,7 @@ function updateFlares(time) {
   })
 }
 // ============================================
-// 🔥 加载 .gltf 樱花树模型（完全原样）
+// 🔥 加载 .gltf 樱花树模型【路径改为相对路径 ./models】
 // ============================================
 function loadTreeForest() {
   console.log('🔄 开始加载樱花树模型...');
@@ -421,7 +421,7 @@ function loadTreeForest() {
     const scale = 0.5 + Math.random() * 2.5;
     
     loader.load(
-      '/models/laying_under_a_tree_with_pink_leaves_and_wind/scene.gltf',
+      './models/laying_under_a_tree_with_pink_leaves_and_wind/scene.gltf',
       (gltf) => {
         const model = gltf.scene;
         model.position.set(x, -3, z);
@@ -463,14 +463,14 @@ function loadTreeForest() {
   }
 }
 // ============================================
-// 🌿 加载草地模型 - 生成草原（原样）
+// 🌿 加载草地模型 - 生成草原【路径改为相对路径 ./models】
 // ============================================
 function loadGrassField() {
   console.log('🌿 开始加载草地模型...');
   const loader = new GLTFLoader();
   
   loader.load(
-    '/models/animated_grass_-_vegetation/scene.gltf',
+    './models/animated_grass_-_vegetation/scene.gltf',
     (gltf) => {
       console.log('✅ 草地模型加载成功！');
       const originalGrass = gltf.scene;
@@ -532,7 +532,7 @@ function loadGrassField() {
     },
     (err) => {
       console.error('❌ 加载草地模型失败:', err);
-      console.log('💡 请检查路径: /models/animated_grass_-_vegetation/scene.gltf');
+      console.log('💡 请检查路径: ./models/animated_grass_-_vegetation/scene.gltf');
     }
   );
 }
@@ -730,7 +730,7 @@ function createSnowmen() {
   console.log(`⛄ ${snowmanPositions.length} 个雪人已添加！`);
 }
 // ============================================
-// 创建水面（优化倒影和反光，原样）
+// 创建水面（优化倒影和反光，路径修改为相对路径 ./textures）
 // ============================================
 function createPool() {
   const size = 180;
@@ -739,7 +739,7 @@ function createPool() {
   
   let waterNormals = null;
   try {
-    waterNormals = texLoader.load('/textures/waternormals.jpg');
+    waterNormals = texLoader.load('./textures/waternormals.jpg');
     waterNormals.wrapS = waterNormals.wrapT = THREE.RepeatWrapping;
   } catch (e) {
     console.warn('⚠️ 未找到 waternormals 贴图：使用简化水面');
@@ -761,7 +761,7 @@ function createPool() {
   waterPlane.renderOrder = 0;
   scene.add(waterPlane);
   const loader = new GLTFLoader();
-  const path = '/models/animated_ocean_scene_tutorial_example_1/scene.gltf';
+  const path = './models/animated_ocean_scene_tutorial_example_1/scene.gltf';
   console.log('💧 加载水面覆盖模型:', path);
   loader.load(
     path,
@@ -840,7 +840,7 @@ createSkyClouds()
 createSunDisk()
 loadTreeForest()
 loadGrassField()
-createGround()
+// createGround() // 注释掉，避免草地平面和雪地重叠冲突
 createPool()
 initPetals()
 initFlares()
@@ -861,11 +861,10 @@ window.addEventListener('resize', () => {
 // 渲染循环
 // ============================================
 let time = 0
-function tick(timestamp) {
+function tick() {
   requestAnimationFrame(tick)
   time += 1
-  timer.update(timestamp);
-  const delta = timer.getDelta();
+  const delta = clock.getDelta();
   controls.update()
   updatePetals()
   updateFlares(time)
@@ -894,8 +893,8 @@ function tick(timestamp) {
   }
   composer.render()
 }
-tick(0)
+tick()
 console.log('🎮 应用启动成功！');
-console.log('📁 树模型路径: /models/laying_under_a_tree_with_pink_leaves_and_wind/scene.gltf');
-console.log('📁 草地模型路径: /models/animated_grass_-_vegetation/scene.gltf');
+console.log('📁 树模型路径: ./models/laying_under_a_tree_with_pink_leaves_and_wind/scene.gltf');
+console.log('📁 草地模型路径: ./models/animated_grass_-_vegetation/scene.gltf');
 console.log('✅ 包含: 粉色树林、草原、雪地、雪人、水面倒影、花瓣、光斑、云层');
